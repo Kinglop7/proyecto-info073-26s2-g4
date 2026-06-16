@@ -30,11 +30,22 @@ OBSTACULO = 1
 JUGADOR = 2
 MANZANA = 3
 
+# Configuracion de obstáculo
+CANT_OBSTACULOS = 10
+
 # Tamaño del tablero
 # Si se cambian estas constantes, se debe modificar la definición
 # del tablero que se encuentra en función reiniciar().
 FILAS = 15
 COLUMNAS = 15
+
+#Celdas que conforman el borde del tablero
+BORDE = (
+    [(c,0) for c in range(COLUMNAS)]
+    + [(c, FILAS - 1) for c in range(COLUMNAS)]
+    + [(0, f) for f in range(1, FILAS -1)]
+    + [(COLUMNAS - 1, f) for f in range(1, FILAS - 1)]
+)
 
 
 def aparecer_aleatorio(tablero, id_elem):
