@@ -14,6 +14,12 @@ ESTADO_VICTORIA = "victoria"
 # Rutas a la carpeta de imágenes de pantallas
 DIR_PANTALLAS = os.path.join(os.path.dirname(__file__), "data", "pantallas")
 
+# Cuantas manzanas se deben comer para ganar
+MANZANAS_PARA_GANAR = 5
+# cuantas manzanas ha comido el jugador hasta el momento
+manzanas_comidas = 0
+
+
 # Se específica el nombre del archivo para cada imagen de pantalla.
 # El formato de imagen utilizado puede ser PNG, JPG/JPEG, BMP, o GIF.
 PANTALLA_INICIO = "pantalla_inicio.bmp"
@@ -30,22 +36,12 @@ OBSTACULO = 1
 JUGADOR = 2
 MANZANA = 3
 
-# Configuracion de obstáculo
-CANT_OBSTACULOS = 10
-
 # Tamaño del tablero
 # Si se cambian estas constantes, se debe modificar la definición
 # del tablero que se encuentra en función reiniciar().
 FILAS = 15
 COLUMNAS = 15
 
-#Celdas que conforman el borde del tablero
-BORDE = (
-    [(c,0) for c in range(COLUMNAS)]
-    + [(c, FILAS - 1) for c in range(COLUMNAS)]
-    + [(0, f) for f in range(1, FILAS -1)]
-    + [(COLUMNAS - 1, f) for f in range(1, FILAS - 1)]
-)
 
 
 def aparecer_aleatorio(tablero, id_elem):
@@ -125,6 +121,10 @@ def refrescar_tablero(screen, tablero):
     # Rellena la pantalla con el color gris, básicamente pintando
     # por encima de lo que estaba anteriormente.
     screen.fill("gray30")
+
+    #definicion de diseños de elemento de tableros
+    
+
 
     # Podemos calcular el tamaño en pixeles que tendrá cada
     # casilla al dividir tanto la altura de la pantalla (screen.get_height())
@@ -221,8 +221,9 @@ def cambiar_direccion(keys, direccion_actual):
     return direccion_actual
 
 
-def avanzar(tablero, pos_jugador, direccion):
+def avanzar(tablero, pos_jugador, direccion, manzanas_comidas, pasos):
     """
+    
     Avanza el jugador un paso en la dirección dada.
 
     Parámetros:
@@ -230,12 +231,16 @@ def avanzar(tablero, pos_jugador, direccion):
         - pos_jugador: Tupla con la posición actual (índice con
             estructura (columna, fila)) del jugador en el tablero.
         - direccion: Tupla con la dirección en la que está avanzando actualmente el jugador.
-
+        - manzanas_comidas: Número de manzanas que el jugador ha comido.
+        - pasos: Número de pasos que el jugador ha dado sin comer.
     Retorna:
         - (resultado, nueva_pos_jugador): Retorna el resultado que se obtiene
             al avanzar (derrota, victoria o "ok" (no cambia de pantalla)) y la nueva posición del jugador.
     """
+    pasos += 1
 
+    if pasos > 15:
+        return "derrota", pos_jugador, manzanas_comidas, pasos
     # Obtenemos los componentes "x" e "y" de cada tupla recibida
     # con información de la dirección y posición del jugador.
     dir_col, dir_fila = direccion
@@ -246,25 +251,42 @@ def avanzar(tablero, pos_jugador, direccion):
     # Aplicamos la dirección a la posición del jugador.
     ind_nueva_col = ind_actual_col + dir_col
     ind_nueva_fila = ind_actual_fila + dir_fila
+    
 
     # Verificamos que no haya choque con el borde del tablero.
     if not (0 <= ind_nueva_col < COLUMNAS and 0 <= ind_nueva_fila < FILAS):
-        return "derrota", pos_jugador
+        return "derrota", pos_jugador, manzanas_comidas
 
     # Obtenemos el elemento que se encuentre en el tablero en la nueva posición del jugador.
     pos_elem = tablero[ind_nueva_fila][ind_nueva_col]
 
     if pos_elem == OBSTACULO:
-        return "derrota", pos_jugador
+        return "derrota", (pos_jugador, manzanas_comidas, pasos)
 
     if pos_elem == MANZANA:
-        return "victoria", (ind_nueva_col, ind_nueva_fila)
+        manzanas_comidas += 1
+        pasos = 0
+
+
+        # mover al jugador a la nueva posición
+        tablero[ind_actual_fila][ind_actual_col] = VACIO
+        tablero[ind_nueva_fila][ind_nueva_col] = JUGADOR
+
+        # si llegamos al objetivo, victoria
+        if manzanas_comidas >= MANZANAS_PARA_GANAR:
+            return "victoria", (ind_nueva_col, ind_nueva_fila), manzanas_comidas,pasos
+        
+        # si no, generar otra manzana y continuar jugando
+        aparecer_aleatorio(tablero, MANZANA)
+        return "ok", (ind_nueva_col, ind_nueva_fila), manzanas_comidas, pasos
+    
+         
 
     # Movimiento normal, si es que no encontramos manzana ni obstáculo.
     tablero[ind_actual_fila][ind_actual_col] = VACIO
     tablero[ind_nueva_fila][ind_nueva_col] = JUGADOR
 
-    return "ok", (ind_nueva_col, ind_nueva_fila)
+    return "ok", (ind_nueva_col, ind_nueva_fila), manzanas_comidas, pasos
 
 
 def reiniciar():
@@ -379,11 +401,15 @@ def main():
                 if estado == ESTADO_INICIO:
                     if evento.key == pygame.K_SPACE:
                         tablero, pos_jugador = reiniciar()
+                        manzanas_comidas = 0
+                        pasos = 0          # <-- Agrega esta línea
                         direccion = (0, 0)
+
                         # Obtiene tiempo en milisegundos
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
                         refrescar_tablero(screen, tablero)
+                        
                     elif evento.key == pygame.K_i:
                         estado = ESTADO_INSTRUCCIONES
                         mostrar_pantalla(screen, PANTALLA_INSTRUCCIONES)
@@ -395,6 +421,8 @@ def main():
                 elif estado in (ESTADO_DERROTA, ESTADO_VICTORIA):
                     if evento.key == pygame.K_r:
                         tablero, pos_jugador = reiniciar()
+                        manzanas_comidas = 0
+                        pasos = 0          
                         direccion = (0, 0)
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
@@ -413,7 +441,7 @@ def main():
             # La variable RETRASO hace que si no han pasado esa cantidad de ticks,
             # entonces no se avanzará en el tablero.
             if direccion != (0, 0) and tiempo_actual - tiempo_ultimo_mov >= RETRASO:
-                resultado, pos_jugador = avanzar(tablero, pos_jugador, direccion)
+                resultado, pos_jugador, manzanas_comidas, pasos = avanzar(tablero, pos_jugador, direccion, manzanas_comidas, pasos)
 
                 if resultado == "derrota":
                     estado = ESTADO_DERROTA
