@@ -14,6 +14,7 @@ ESTADO_INSTRUCCIONES = "instrucciones"
 ESTADO_JUGANDO = "jugando"
 ESTADO_DERROTA = "derrota"
 ESTADO_VICTORIA = "victoria"
+ESTADO_HISTORIA = "historia"
 
 causa_derrota = None 
 
@@ -33,6 +34,7 @@ PANTALLA_INICIO = "pantalla_inicio.bmp"
 PANTALLA_INSTRUCCIONES = "pantalla_instrucciones.bmp"
 PANTALLA_VICTORIA = "pantalla_victoria.bmp"
 PANTALLA_DERROTA = "pantalla_derrota.bmp"
+PANTALLA_HISTORIA = "pantalla_historia.bmp"
 
 # Para evitar que el jugador se mueva demasiado rápido
 RETRASO_NORMAL = 250
@@ -960,7 +962,7 @@ def main():
                     if estado == ESTADO_JUGANDO:
                         refrescar_tablero(screen, game_surface, tablero, direccion, serpiente,manzanas_comidas, pinzas_obtenidas, pasos, background_game, background,wall, apple, head_original,body_original, tail_original,corner_original, bolsa,red, botella, pinza, tuberia, silueta_pinza, silueta_bolsa, silueta_red, tiempo_bolsa, tiempo_red)
                     else:
-                        mostrar_pantalla(screen, {ESTADO_INICIO: PANTALLA_INICIO,ESTADO_INSTRUCCIONES: PANTALLA_INSTRUCCIONES,ESTADO_DERROTA: PANTALLA_DERROTA,ESTADO_VICTORIA: PANTALLA_VICTORIA}[estado])
+                        mostrar_pantalla(screen, {ESTADO_INICIO: PANTALLA_INICIO,ESTADO_INSTRUCCIONES: PANTALLA_INSTRUCCIONES,ESTADO_HISTORIA: PANTALLA_HISTORIA,ESTADO_DERROTA: PANTALLA_DERROTA,ESTADO_VICTORIA: PANTALLA_VICTORIA}[estado])
 
                     # Redibujar inmediatamente
                     if estado == ESTADO_JUGANDO:
@@ -970,6 +972,9 @@ def main():
                         mostrar_pantalla(screen, PANTALLA_INICIO)
                     elif estado == ESTADO_INSTRUCCIONES:
                         mostrar_pantalla(screen, PANTALLA_INSTRUCCIONES)
+                    
+                    elif estado == ESTADO_HISTORIA:
+                        mostrar_pantalla(screen, PANTALLA_HISTORIA)
 
                     elif estado == ESTADO_DERROTA:
                         mostrar_pantalla(screen, PANTALLA_DERROTA)
@@ -1005,10 +1010,17 @@ def main():
                     elif evento.key == pygame.K_i:
                         estado = ESTADO_INSTRUCCIONES
                         mostrar_pantalla(screen, PANTALLA_INSTRUCCIONES)
+                    elif evento.key == pygame.K_h:
+                        estado = ESTADO_HISTORIA
+                        mostrar_pantalla(screen, PANTALLA_HISTORIA)
 
                 elif estado == ESTADO_INSTRUCCIONES:
                     estado = ESTADO_INICIO
                     mostrar_pantalla(screen, PANTALLA_INICIO)
+
+                elif estado == ESTADO_HISTORIA:
+                        estado = ESTADO_INICIO
+                        mostrar_pantalla(screen, PANTALLA_INICIO)
 
                 elif estado in (ESTADO_DERROTA, ESTADO_VICTORIA):
                     if evento.key == pygame.K_r:
